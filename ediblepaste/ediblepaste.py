@@ -1,6 +1,6 @@
 import requests
 import json
-import .config
+from . import config
 
 class EdiblePaste():
     def __init__(self):
@@ -21,6 +21,7 @@ class EdiblePaste():
 
         for gist_meta in r.json():
             for file_name, file_meta in gist_meta["files"].items():
+                gist_data = {}
                 gist_data['scrape_url'] = file_meta['raw_url']
                 gist_data['full_url'] = gist_meta['html_url']
                 gist_data['date'] = gist_meta['created_at']
