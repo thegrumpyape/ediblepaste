@@ -1,6 +1,6 @@
 import requests
 import json
-import config
+import .config
 
 class EdiblePaste():
     def __init__(self):
