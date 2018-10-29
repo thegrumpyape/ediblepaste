@@ -4,18 +4,25 @@ from . import config
 
 class EdiblePaste():
     def __init__(self):
+        """Initializes the class"""
         self.pastebin_url = config.PASTEBIN_URL
         self.gist_url = config.GIST_URL
         self.limit = config.LIMIT
 
+    def scrape(self):
+        """Scrapes all sites for paste data"""
+        pastes = self.get_pastes() + self.get_gists()
+        for paste in pastes:
+            paste['raw_paste'] = self.get_raw(paste['scrape_url'])
+        return pastes
+
     def get_pastes(self):
+        """Scrape pastes from pastebin.com"""
         r = requests.get('{0}?limit={1}'.format(self.pastebin_url, self.limit))
         return r.json()
 
-    def get_paste_raw(self, scrape_url):
-        return requests.get(scrape_url).text
-
     def get_gists(self):
+        """Scrape gists from github.com"""
         gists = []
         r = requests.get('{}/gists?per_page={}'.format(self.gist_url, self.limit))
 
@@ -35,5 +42,6 @@ class EdiblePaste():
 
         return gists
 
-    def get_gist_raw(self,scrape_url):
+    def get_raw(self, scrape_url):
+        """Get raw data from scrape url"""
         return requests.get(scrape_url).text
