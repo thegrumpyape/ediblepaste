@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='ediblepaste',
-    version='1.2',
+    version='1.2.1',
     author='Chris Doucette',
     author_email='chrisdoucette15@gmail.com',
     description='Wrapper for paste sites API',
