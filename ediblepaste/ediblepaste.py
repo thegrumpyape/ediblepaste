@@ -1,32 +1,54 @@
 import requests
 import json
 from . import config
+from .exception import APIError
 
 class EdiblePaste():
     def __init__(self):
         """Initializes the class"""
         self.pastebin_url = config.PASTEBIN_URL
         self.gist_url = config.GIST_URL
-        self.limit = config.LIMIT
+        self._session = requests.Session()
 
-    def scrape(self):
-        """Scrapes all sites for paste data"""
-        pastes = self.get_pastes() + self.get_gists()
-        for paste in pastes:
-            paste['raw_paste'] = self.get_raw(paste['scrape_url'])
-        return pastes
 
-    def get_pastes(self):
+    def _request(self, function, params, service):
+        # Determine the base_url based on the service that is being requested
+        base_url = {
+            'pastebin': self.pastebin_url
+            'gist': self.gist_url
+        }.get(service)
+
+        # Send the request
+        try:
+            data = self._session.get(base_url + function)
+        except Exception:
+            raise APIError('Unable to connect to service')
+
+        # Parse the text into JSON
+        try:
+            data = data.json()
+        except ValueError:
+            raise APIError('Unable to parse JSON response')
+
+        return data
+
+
+    def pastes(self, limit=250):
         """Scrape pastes from pastebin.com"""
-        r = requests.get('{0}?limit={1}'.format(self.pastebin_url, self.limit))
-        return r.json()
+        params = {
+            'limit': limit,
+        }
+        return self._request('/api_scraping.php', params, service='pastebin')
 
-    def get_gists(self):
+
+    def gists(self, per_page=100):
         """Scrape gists from github.com"""
-        gists = []
-        r = requests.get('{}/gists?per_page={}'.format(self.gist_url, self.limit))
+        params = {
+            'per_page': per_page,
+        }
+        r = self._request('/gists', params, service='gist')
 
-        for gist_meta in r.json():
+        for gist_meta in r:
             for file_name, file_meta in gist_meta["files"].items():
                 gist_data = {}
                 gist_data['scrape_url'] = file_meta['raw_url']
@@ -42,6 +64,7 @@ class EdiblePaste():
 
         return gists
 
-    def get_raw(self, scrape_url):
+
+    def raw(self, scrape_url):
         """Get raw data from scrape url"""
         return requests.get(scrape_url).text
